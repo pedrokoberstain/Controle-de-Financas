@@ -26,4 +26,5 @@ export type {
   NewProjectItem,
   NewFixedExpense,
   NewCard,
+  BackupData,
 } from './repository'

@@ -3,6 +3,7 @@ import { BottomNav, type Tab } from './components/BottomNav'
 import { Dashboard } from './features/dashboard/Dashboard'
 import { MonthlyScreen } from './features/monthly/MonthlyScreen'
 import { ProjectsScreen } from './features/projects/ProjectsScreen'
+import { SettingsScreen } from './features/settings/SettingsScreen'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
@@ -12,6 +13,7 @@ export default function App() {
       {tab === 'home' && <Dashboard />}
       {tab === 'month' && <MonthlyScreen />}
       {tab === 'projects' && <ProjectsScreen />}
+      {tab === 'settings' && <SettingsScreen />}
       <BottomNav active={tab} onChange={setTab} />
     </>
   )
