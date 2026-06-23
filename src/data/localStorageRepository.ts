@@ -15,6 +15,7 @@ import type {
   BackupData,
   FinanceRepository,
   NewCard,
+  NewCategory,
   NewFixedExpense,
   NewInstallmentPurchase,
   NewProject,
@@ -111,6 +112,34 @@ export class LocalStorageRepository implements FinanceRepository {
     if (stored && stored.length > 0) return stored
     write(KEYS.categories, DEFAULT_CATEGORIES)
     return DEFAULT_CATEGORIES
+  }
+
+  async addCategory(input: NewCategory): Promise<Category> {
+    const category: Category = { ...input, id: makeId() }
+    const items = await this.listCategories()
+    items.push(category)
+    write(KEYS.categories, items)
+    return category
+  }
+
+  async updateCategory(
+    id: string,
+    patch: Partial<NewCategory>,
+  ): Promise<Category> {
+    const items = await this.listCategories()
+    const idx = items.findIndex((c) => c.id === id)
+    if (idx === -1) throw new Error('Categoria não encontrada')
+    items[idx] = { ...items[idx], ...patch }
+    write(KEYS.categories, items)
+    return items[idx]
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    const items = await this.listCategories()
+    write(
+      KEYS.categories,
+      items.filter((c) => c.id !== id),
+    )
   }
 
   // ----------------------------------------------------------------- Orçamento

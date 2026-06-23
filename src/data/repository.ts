@@ -13,6 +13,9 @@ import type {
 /** Dados de entrada para criar uma transação (id/createdAt são gerados). */
 export type NewTransaction = Omit<Transaction, 'id' | 'createdAt'>
 
+/** Dados de entrada para criar uma categoria (id é gerado). */
+export type NewCategory = Omit<Category, 'id'>
+
 /** Dados de entrada para criar um projeto. */
 export type NewProject = Omit<Project, 'id' | 'createdAt'>
 
@@ -56,6 +59,9 @@ export interface FinanceRepository {
 
   // Categorias
   listCategories(): Promise<Category[]>
+  addCategory(input: NewCategory): Promise<Category>
+  updateCategory(id: string, patch: Partial<NewCategory>): Promise<Category>
+  deleteCategory(id: string): Promise<void>
 
   // Orçamento
   getBudget(): Promise<Budget>

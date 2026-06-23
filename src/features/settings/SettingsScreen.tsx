@@ -3,12 +3,18 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { repository, type BackupData } from '../../data'
 import { todayISO } from '../../domain/period'
+import { CategoriesScreen } from './CategoriesScreen'
 
 type Status = { kind: 'idle' | 'ok' | 'error'; message?: string }
 
 export function SettingsScreen() {
   const fileInput = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [showCategories, setShowCategories] = useState(false)
+
+  if (showCategories) {
+    return <CategoriesScreen onBack={() => setShowCategories(false)} />
+  }
 
   async function handleExport() {
     try {
@@ -49,8 +55,18 @@ export function SettingsScreen() {
     <div className="mx-auto min-h-screen w-full max-w-md px-4 pb-28 pt-6">
       <header className="mb-5">
         <h1 className="text-xl font-bold">Ajustes</h1>
-        <p className="text-sm text-muted">Backup e dados do app</p>
+        <p className="text-sm text-muted">Categorias, backup e dados do app</p>
       </header>
+
+      <button onClick={() => setShowCategories(true)} className="mb-4 w-full">
+        <Card className="flex items-center justify-between transition active:scale-[0.99]">
+          <div className="text-left">
+            <p className="text-sm font-semibold">Categorias</p>
+            <p className="text-xs text-muted">Criar, editar e remover</p>
+          </div>
+          <span className="text-muted">›</span>
+        </Card>
+      </button>
 
       <Card>
         <p className="text-sm font-semibold">Backup dos dados</p>

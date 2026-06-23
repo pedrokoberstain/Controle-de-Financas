@@ -22,6 +22,7 @@ export const repository: FinanceRepository = createRepository()
 export type {
   FinanceRepository,
   NewTransaction,
+  NewCategory,
   NewProject,
   NewProjectItem,
   NewFixedExpense,
