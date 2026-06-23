@@ -3,6 +3,7 @@ import type {
   Card,
   Category,
   FixedExpense,
+  InstallmentPurchase,
   MonthlySettings,
   Project,
   ProjectItem,
@@ -15,6 +16,7 @@ import type {
   FinanceRepository,
   NewCard,
   NewFixedExpense,
+  NewInstallmentPurchase,
   NewProject,
   NewProjectItem,
   NewTransaction,
@@ -31,6 +33,7 @@ const KEYS = {
   monthlySettings: 'cf:monthlySettings',
   fixedExpenses: 'cf:fixedExpenses',
   cards: 'cf:cards',
+  installments: 'cf:installments',
 } as const
 
 const DEFAULT_BUDGET: Budget = { monthlyLimitCents: 300000 } // R$ 3.000,00
@@ -334,6 +337,47 @@ export class LocalStorageRepository implements FinanceRepository {
     write(
       KEYS.cards,
       cards.filter((c) => c.id !== id),
+    )
+  }
+
+  // ------------------------------------------------------- Compras parceladas
+  async listInstallments(): Promise<InstallmentPurchase[]> {
+    return read<InstallmentPurchase[]>(KEYS.installments, []).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    )
+  }
+
+  async addInstallment(
+    input: NewInstallmentPurchase,
+  ): Promise<InstallmentPurchase> {
+    const created: InstallmentPurchase = {
+      ...input,
+      id: makeId(),
+      createdAt: new Date().toISOString(),
+    }
+    const items = read<InstallmentPurchase[]>(KEYS.installments, [])
+    items.push(created)
+    write(KEYS.installments, items)
+    return created
+  }
+
+  async updateInstallment(
+    id: string,
+    patch: Partial<NewInstallmentPurchase>,
+  ): Promise<InstallmentPurchase> {
+    const items = read<InstallmentPurchase[]>(KEYS.installments, [])
+    const idx = items.findIndex((i) => i.id === id)
+    if (idx === -1) throw new Error('Parcelamento não encontrado')
+    items[idx] = { ...items[idx], ...patch }
+    write(KEYS.installments, items)
+    return items[idx]
+  }
+
+  async deleteInstallment(id: string): Promise<void> {
+    const items = read<InstallmentPurchase[]>(KEYS.installments, [])
+    write(
+      KEYS.installments,
+      items.filter((i) => i.id !== id),
     )
   }
 

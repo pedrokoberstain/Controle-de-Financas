@@ -3,6 +3,7 @@ import type {
   Card,
   Category,
   FixedExpense,
+  InstallmentPurchase,
   MonthlySettings,
   Project,
   ProjectItem,
@@ -23,6 +24,12 @@ export type NewFixedExpense = Omit<FixedExpense, 'id' | 'createdAt'>
 
 /** Dados de entrada para criar um cartão. */
 export type NewCard = Omit<Card, 'id' | 'createdAt'>
+
+/** Dados de entrada para criar uma compra parcelada. */
+export type NewInstallmentPurchase = Omit<
+  InstallmentPurchase,
+  'id' | 'createdAt'
+>
 
 /** Pacote de backup com todos os dados do app. */
 export interface BackupData {
@@ -89,6 +96,15 @@ export interface FinanceRepository {
   addCard(input: NewCard): Promise<Card>
   updateCard(id: string, patch: Partial<NewCard>): Promise<Card>
   deleteCard(id: string): Promise<void>
+
+  // Compras parceladas
+  listInstallments(): Promise<InstallmentPurchase[]>
+  addInstallment(input: NewInstallmentPurchase): Promise<InstallmentPurchase>
+  updateInstallment(
+    id: string,
+    patch: Partial<NewInstallmentPurchase>,
+  ): Promise<InstallmentPurchase>
+  deleteInstallment(id: string): Promise<void>
 
   // Backup
   exportData(): Promise<BackupData>

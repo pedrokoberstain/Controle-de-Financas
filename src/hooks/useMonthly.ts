@@ -3,13 +3,15 @@ import {
   repository,
   type NewCard,
   type NewFixedExpense,
+  type NewInstallmentPurchase,
 } from '../data'
-import type { Card, FixedExpense } from '../domain/types'
+import type { Card, FixedExpense, InstallmentPurchase } from '../domain/types'
 
 interface MonthlyState {
   salaryCents: number
   fixedExpenses: FixedExpense[]
   cards: Card[]
+  installments: InstallmentPurchase[]
   loading: boolean
   error: string | null
 }
@@ -18,6 +20,7 @@ const INITIAL: MonthlyState = {
   salaryCents: 0,
   fixedExpenses: [],
   cards: [],
+  installments: [],
   loading: true,
   error: null,
 }
@@ -29,15 +32,17 @@ export function useMonthly() {
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
-      const [settings, fixedExpenses, cards] = await Promise.all([
+      const [settings, fixedExpenses, cards, installments] = await Promise.all([
         repository.getMonthlySettings(),
         repository.listFixedExpenses(),
         repository.listCards(),
+        repository.listInstallments(),
       ])
       setState({
         salaryCents: settings.salaryCents,
         fixedExpenses,
         cards,
+        installments,
         loading: false,
         error: null,
       })
@@ -116,6 +121,33 @@ export function useMonthly() {
     setState((s) => ({ ...s, cards: s.cards.filter((c) => c.id !== id) }))
   }, [])
 
+  // ----- Compras parceladas
+  const addInstallment = useCallback(async (input: NewInstallmentPurchase) => {
+    const created = await repository.addInstallment(input)
+    setState((s) => ({ ...s, installments: [...s.installments, created] }))
+    return created
+  }, [])
+
+  const updateInstallment = useCallback(
+    async (id: string, patch: Partial<NewInstallmentPurchase>) => {
+      const updated = await repository.updateInstallment(id, patch)
+      setState((s) => ({
+        ...s,
+        installments: s.installments.map((p) => (p.id === id ? updated : p)),
+      }))
+      return updated
+    },
+    [],
+  )
+
+  const deleteInstallment = useCallback(async (id: string) => {
+    await repository.deleteInstallment(id)
+    setState((s) => ({
+      ...s,
+      installments: s.installments.filter((p) => p.id !== id),
+    }))
+  }, [])
+
   return {
     ...state,
     reload: load,
@@ -127,5 +159,8 @@ export function useMonthly() {
     addCard,
     updateCard,
     deleteCard,
+    addInstallment,
+    updateInstallment,
+    deleteInstallment,
   }
 }

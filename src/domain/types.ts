@@ -92,6 +92,26 @@ export interface Card {
   createdAt: string
 }
 
+/**
+ * Compra parcelada: lançada uma vez e distribuída por N meses. Aparece
+ * como uma parcela nas contas de cada mês dentro do intervalo.
+ */
+export interface InstallmentPurchase {
+  id: string
+  name: string
+  /** Valor de cada parcela em centavos. */
+  installmentCents: number
+  /** Número total de parcelas. */
+  installments: number
+  /** Mês da 1ª parcela, no formato "YYYY-MM". */
+  startMonth: string
+  /** Dia de vencimento (1-31) ou null. */
+  dueDay: number | null
+  /** Meses ("YYYY-MM") já marcados como pagos. */
+  paidMonths: string[]
+  createdAt: string
+}
+
 /** Configurações do planejamento mensal. */
 export interface MonthlySettings {
   /** Salário/renda mensal em centavos. */

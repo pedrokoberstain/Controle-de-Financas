@@ -12,6 +12,7 @@ interface BillRowProps {
 /** Linha de uma conta a pagar (fixa ou cartão) na lista do mês. */
 export function BillRow({ bill, today, onToggle, onEdit }: BillRowProps) {
   const isCard = bill.kind === 'card'
+  const icon = bill.kind === 'card' ? '💳' : bill.kind === 'installment' ? '🧾' : '📌'
   const notLaunched = isCard && bill.amountCents === 0
   const dueSoon =
     !bill.paid &&
@@ -35,7 +36,7 @@ export function BillRow({ bill, today, onToggle, onEdit }: BillRowProps) {
         onClick={() => onEdit(bill)}
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
-        <span className="text-lg">{isCard ? '💳' : '📌'}</span>
+        <span className="text-lg">{icon}</span>
         <div className="min-w-0">
           <p
             className={`truncate text-sm font-medium ${

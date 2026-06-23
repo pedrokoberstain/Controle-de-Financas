@@ -7,13 +7,18 @@ import {
   monthLabel,
   startOfMonth,
 } from '../../domain/period'
-import type { Card, FixedExpense } from '../../domain/types'
+import type {
+  Card,
+  FixedExpense,
+  InstallmentPurchase,
+} from '../../domain/types'
 import { useMonthly } from '../../hooks/useMonthly'
 import { BillRow } from './BillRow'
 import { CardSheet } from './CardSheet'
 import { CreditCardsSection } from './CreditCardsSection'
 import { FixedExpenseSheet } from './FixedExpenseSheet'
 import { ImportFixedSheet } from './ImportFixedSheet'
+import { InstallmentSheet } from './InstallmentSheet'
 import { MonthSummaryCard } from './MonthSummaryCard'
 import { ProjectionCard } from './ProjectionCard'
 import { SalarySheet } from './SalarySheet'
@@ -23,6 +28,7 @@ export function MonthlyScreen() {
     salaryCents,
     fixedExpenses,
     cards,
+    installments,
     loading,
     error,
     setSalary,
@@ -33,14 +39,20 @@ export function MonthlyScreen() {
     addCard,
     updateCard,
     deleteCard,
+    addInstallment,
+    updateInstallment,
+    deleteInstallment,
   } = useMonthly()
 
   const [showSalary, setShowSalary] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showNewFixed, setShowNewFixed] = useState(false)
   const [showNewCard, setShowNewCard] = useState(false)
+  const [showNewInstallment, setShowNewInstallment] = useState(false)
   const [editingFixed, setEditingFixed] = useState<FixedExpense | null>(null)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  const [editingInstallment, setEditingInstallment] =
+    useState<InstallmentPurchase | null>(null)
   // Mês exibido (1º dia do mês). Permite navegar para o passado/futuro.
   const [refDate, setRefDate] = useState(() => startOfMonth())
 
@@ -50,17 +62,32 @@ export function MonthlyScreen() {
   const today = isCurrentMonth ? new Date().getDate() : 99
 
   const summary = useMemo(
-    () => computeMonthSummary(salaryCents, fixedExpenses, cards, refDate),
-    [salaryCents, fixedExpenses, cards, refDate],
+    () =>
+      computeMonthSummary(
+        salaryCents,
+        fixedExpenses,
+        cards,
+        installments,
+        refDate,
+      ),
+    [salaryCents, fixedExpenses, cards, installments, refDate],
   )
 
   function handleToggle(bill: Bill) {
-    const paidMonth = bill.paid ? null : month
+    const paid = bill.paid
     if (bill.kind === 'fixed') {
-      void updateFixed(bill.id, { paidMonth })
-    } else {
+      void updateFixed(bill.id, { paidMonth: paid ? null : month })
+    } else if (bill.kind === 'card') {
       // Garante que o "pago" se refira à fatura do mês corrente.
-      void updateCard(bill.id, { paidMonth, billMonth: month })
+      void updateCard(bill.id, { paidMonth: paid ? null : month, billMonth: month })
+    } else {
+      // Parcela: adiciona/remove o mês corrente da lista de pagos.
+      const found = installments.find((p) => p.id === bill.id)
+      if (!found) return
+      const paidMonths = paid
+        ? found.paidMonths.filter((m) => m !== month)
+        : [...found.paidMonths, month]
+      void updateInstallment(bill.id, { paidMonths })
     }
   }
 
@@ -68,9 +95,12 @@ export function MonthlyScreen() {
     if (bill.kind === 'fixed') {
       const found = fixedExpenses.find((f) => f.id === bill.id)
       if (found) setEditingFixed(found)
-    } else {
+    } else if (bill.kind === 'card') {
       const found = cards.find((c) => c.id === bill.id)
       if (found) setEditingCard(found)
+    } else {
+      const found = installments.find((p) => p.id === bill.id)
+      if (found) setEditingInstallment(found)
     }
   }
 
@@ -129,24 +159,30 @@ export function MonthlyScreen() {
       </div>
 
       {/* Ações */}
-      <div className="mt-6 mb-3 flex gap-2">
+      <div className="mt-6 mb-3 grid grid-cols-2 gap-2">
         <button
           onClick={() => setShowNewFixed(true)}
-          className="min-h-11 flex-1 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
+          className="min-h-11 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
         >
           + Conta fixa
         </button>
         <button
-          onClick={() => setShowImport(true)}
-          className="min-h-11 flex-1 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
+          onClick={() => setShowNewInstallment(true)}
+          className="min-h-11 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
         >
-          📋 Importar
+          + Parcelado
         </button>
         <button
           onClick={() => setShowNewCard(true)}
-          className="min-h-11 flex-1 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
+          className="min-h-11 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
         >
           + Cartão
+        </button>
+        <button
+          onClick={() => setShowImport(true)}
+          className="min-h-11 rounded-xl bg-surface-2 text-sm font-medium transition active:scale-95"
+        >
+          📋 Importar
         </button>
       </div>
 
@@ -236,6 +272,25 @@ export function MonthlyScreen() {
             setEditingCard(null)
           }}
           onClose={() => setEditingCard(null)}
+        />
+      )}
+
+      {showNewInstallment && (
+        <InstallmentSheet
+          onSubmit={addInstallment}
+          onClose={() => setShowNewInstallment(false)}
+        />
+      )}
+
+      {editingInstallment && (
+        <InstallmentSheet
+          purchase={editingInstallment}
+          onSubmit={(patch) => updateInstallment(editingInstallment.id, patch)}
+          onDelete={() => {
+            void deleteInstallment(editingInstallment.id)
+            setEditingInstallment(null)
+          }}
+          onClose={() => setEditingInstallment(null)}
         />
       )}
     </div>
