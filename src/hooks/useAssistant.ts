@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react'
 import { getApiKey, getModel } from '../features/assistant/aiConfig'
 import {
   describeError,
-  streamAnswer,
   type ChatMessage,
 } from '../features/assistant/assistantClient'
+import { runAgent } from '../features/assistant/assistantAgent'
 import { buildFinancialContext } from '../features/assistant/buildContext'
 
 /** Gerencia a conversa com o assistente de IA e o streaming das respostas. */
@@ -35,21 +35,30 @@ export function useAssistant() {
 
       try {
         const context = await buildFinancialContext()
+        let actions = ''
         let answer = ''
-        for await (const chunk of streamAnswer({
-          apiKey,
-          model: getModel(),
-          context,
-          history,
-        })) {
-          answer += chunk
+        const render = () => {
+          const content = `${actions}${answer}`.trim() || '…'
           setMessages((m) => {
             const copy = [...m]
-            copy[copy.length - 1] = { role: 'assistant', content: answer }
+            copy[copy.length - 1] = { role: 'assistant', content }
             return copy
           })
         }
-        if (!answer) {
+        await runAgent(
+          { apiKey, model: getModel(), context, history },
+          {
+            onText: (chunk) => {
+              answer += chunk
+              render()
+            },
+            onAction: (label) => {
+              actions += `✅ ${label}\n`
+              render()
+            },
+          },
+        )
+        if (!actions && !answer) {
           setMessages((m) => {
             const copy = [...m]
             copy[copy.length - 1] = {

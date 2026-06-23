@@ -6,8 +6,8 @@ import { ApiKeySheet } from './ApiKeySheet'
 const SUGGESTIONS = [
   'Quanto eu ainda posso gastar esse mês?',
   'Pra onde foi mais dinheiro esse mês?',
-  'Quais contas ainda faltam pagar?',
-  'Posso comprar algo de R$ 300 agora?',
+  'Lança 35 de almoço hoje',
+  'Minha renda é 3000',
 ]
 
 export function AssistantScreen() {
