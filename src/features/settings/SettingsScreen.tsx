@@ -4,6 +4,12 @@ import { Card } from '../../components/ui/Card'
 import { repository, type BackupData } from '../../data'
 import { todayISO } from '../../domain/period'
 import { CategoriesScreen } from './CategoriesScreen'
+import {
+  checkDueBills,
+  disableNotifications,
+  enableNotifications,
+  notificationsEnabled,
+} from '../notifications/dueReminders'
 
 type Status = { kind: 'idle' | 'ok' | 'error'; message?: string }
 
@@ -11,6 +17,23 @@ export function SettingsScreen() {
   const fileInput = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const [showCategories, setShowCategories] = useState(false)
+  const [notify, setNotify] = useState(notificationsEnabled())
+
+  async function toggleNotify() {
+    if (notify) {
+      disableNotifications()
+      setNotify(false)
+    } else {
+      const ok = await enableNotifications()
+      setNotify(ok)
+      if (ok) void checkDueBills()
+      else
+        setStatus({
+          kind: 'error',
+          message: 'Permissão de notificação negada pelo navegador.',
+        })
+    }
+  }
 
   if (showCategories) {
     return <CategoriesScreen onBack={() => setShowCategories(false)} />
@@ -67,6 +90,29 @@ export function SettingsScreen() {
           <span className="text-muted">›</span>
         </Card>
       </button>
+
+      <Card className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold">Lembretes de vencimento</p>
+          <p className="text-xs text-muted">
+            Avisa quando uma conta está perto de vencer
+          </p>
+        </div>
+        <button
+          onClick={toggleNotify}
+          role="switch"
+          aria-checked={notify}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+            notify ? 'bg-brand' : 'bg-surface-2'
+          }`}
+        >
+          <span
+            className={`absolute top-1 h-5 w-5 rounded-full bg-text transition-all ${
+              notify ? 'left-6' : 'left-1'
+            }`}
+          />
+        </button>
+      </Card>
 
       <Card>
         <p className="text-sm font-semibold">Backup dos dados</p>
