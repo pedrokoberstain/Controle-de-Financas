@@ -35,6 +35,34 @@ function cardBillForMonth(card: Card, month: string): number {
   return card.billMonth === month ? card.billCents : 0
 }
 
+export interface CardMargin {
+  card: Card
+  /** Limite do cartão (centavos). */
+  limitCents: number
+  /** Fatura aberta considerada (centavos). */
+  billCents: number
+  /** Quanto ainda dá pra passar: limite − fatura (centavos). */
+  availableCents: number
+  /** Fração do limite já usada (0..1+). */
+  usedRatio: number
+}
+
+/**
+ * Margem de crédito de um cartão: quanto ainda dá pra gastar (limite menos
+ * a fatura aberta). Usa a fatura do mês informado.
+ */
+export function computeCardMargin(card: Card, month: string): CardMargin {
+  const limitCents = card.limitCents ?? 0
+  const billCents = cardBillForMonth(card, month)
+  return {
+    card,
+    limitCents,
+    billCents,
+    availableCents: limitCents - billCents,
+    usedRatio: limitCents > 0 ? billCents / limitCents : 0,
+  }
+}
+
 /** Quantos dias faltam até o fim do mês (mínimo 1). */
 function daysLeftInMonth(reference: Date): number {
   const lastDay = new Date(

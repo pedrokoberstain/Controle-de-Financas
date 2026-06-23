@@ -11,6 +11,7 @@ import type { Card, FixedExpense } from '../../domain/types'
 import { useMonthly } from '../../hooks/useMonthly'
 import { BillRow } from './BillRow'
 import { CardSheet } from './CardSheet'
+import { CreditCardsSection } from './CreditCardsSection'
 import { FixedExpenseSheet } from './FixedExpenseSheet'
 import { ImportFixedSheet } from './ImportFixedSheet'
 import { MonthSummaryCard } from './MonthSummaryCard'
@@ -175,6 +176,12 @@ export function MonthlyScreen() {
           </ul>
         )}
       </section>
+
+      <CreditCardsSection
+        cards={cards}
+        month={month}
+        onEdit={setEditingCard}
+      />
 
       {/* Sheets */}
       {showSalary && (

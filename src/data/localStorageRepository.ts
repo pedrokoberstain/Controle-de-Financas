@@ -293,6 +293,7 @@ export class LocalStorageRepository implements FinanceRepository {
     if (localStorage.getItem(KEYS.cards) === null) {
       const seeded = DEFAULT_CARDS.map((c, i) => ({
         ...c,
+        limitCents: 0,
         billCents: 0,
         billMonth: null,
         paidMonth: null,

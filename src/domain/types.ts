@@ -79,6 +79,8 @@ export interface FixedExpense {
 export interface Card {
   id: string
   name: string
+  /** Limite total do cartão em centavos (0 = não informado). */
+  limitCents: number
   /** Dia de vencimento da fatura (1-31) ou null. */
   dueDay: number | null
   /** Valor da fatura lançada, em centavos. */

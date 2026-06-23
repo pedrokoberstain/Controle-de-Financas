@@ -32,6 +32,9 @@ export function CardSheet({
   const editing = Boolean(card)
   const [name, setName] = useState(card?.name ?? '')
   const [day, setDay] = useState(card?.dueDay ? String(card.dueDay) : '')
+  const [limit, setLimit] = useState(
+    card?.limitCents ? formatAmount(card.limitCents) : '',
+  )
   // Só pré-preenche a fatura se ela for do mês corrente.
   const [bill, setBill] = useState(
     card && card.billMonth === month ? formatAmount(card.billCents) : '',
@@ -50,10 +53,16 @@ export function CardSheet({
       setError('Valor da fatura inválido.')
       return
     }
+    const limitCents = limit ? parseToCents(limit) : 0
+    if (limitCents === null) {
+      setError('Limite inválido.')
+      return
+    }
     setSubmitting(true)
     try {
       await onSubmit({
         name: name.trim(),
+        limitCents,
         dueDay: day ? parseDay(day) : null,
         billCents,
         billMonth: billCents > 0 ? month : (card?.billMonth ?? null),
@@ -96,6 +105,17 @@ export function CardSheet({
             />
           </div>
         </div>
+
+        <label className="block text-xs text-muted">
+          Limite do cartão (R$)
+        </label>
+        <input
+          inputMode="decimal"
+          value={limit}
+          onChange={(e) => setLimit(e.target.value)}
+          placeholder="0,00"
+          className="mb-3 w-full rounded-xl border border-border bg-bg px-4 py-3 text-lg font-semibold outline-none focus:border-brand"
+        />
 
         <label className="block text-xs text-muted">
           Fatura deste mês (R$)
