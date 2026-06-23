@@ -1,4 +1,4 @@
-export type Tab = 'home' | 'month' | 'projects' | 'settings'
+export type Tab = 'home' | 'month' | 'projects' | 'assistant' | 'settings'
 
 interface BottomNavProps {
   active: Tab
@@ -9,6 +9,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'home', label: 'Início', icon: '🏠' },
   { id: 'month', label: 'Mês', icon: '📅' },
   { id: 'projects', label: 'Projetos', icon: '🎯' },
+  { id: 'assistant', label: 'IA', icon: '🤖' },
   { id: 'settings', label: 'Ajustes', icon: '⚙️' },
 ]
 

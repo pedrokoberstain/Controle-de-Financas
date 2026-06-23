@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BottomNav, type Tab } from './components/BottomNav'
+import { AssistantScreen } from './features/assistant/AssistantScreen'
 import { Dashboard } from './features/dashboard/Dashboard'
 import { MonthlyScreen } from './features/monthly/MonthlyScreen'
 import { ProjectsScreen } from './features/projects/ProjectsScreen'
@@ -13,6 +14,7 @@ export default function App() {
       {tab === 'home' && <Dashboard />}
       {tab === 'month' && <MonthlyScreen />}
       {tab === 'projects' && <ProjectsScreen />}
+      {tab === 'assistant' && <AssistantScreen />}
       {tab === 'settings' && <SettingsScreen />}
       <BottomNav active={tab} onChange={setTab} />
     </>
