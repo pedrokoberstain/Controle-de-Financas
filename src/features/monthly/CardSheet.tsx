@@ -4,6 +4,7 @@ import { Sheet } from '../../components/ui/Sheet'
 import { formatAmount, parseToCents } from '../../domain/money'
 import type { Card } from '../../domain/types'
 import type { NewCard } from '../../data'
+import { InvoiceImportSheet } from './InvoiceImportSheet'
 
 interface CardSheetProps {
   /** Quando presente, edita o cartão existente. */
@@ -39,6 +40,7 @@ export function CardSheet({
   const [bill, setBill] = useState(
     card && card.billMonth === month ? formatAmount(card.billCents) : '',
   )
+  const [showInvoice, setShowInvoice] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,6 +79,7 @@ export function CardSheet({
   }
 
   return (
+    <>
     <Sheet
       title={editing ? 'Cartão' : 'Novo cartão'}
       subtitle="Lance quanto deve na fatura deste mês. O valor zera no próximo mês."
@@ -117,9 +120,16 @@ export function CardSheet({
           className="mb-3 w-full rounded-xl border border-border bg-bg px-4 py-3 text-lg font-semibold outline-none focus:border-brand"
         />
 
-        <label className="block text-xs text-muted">
-          Fatura deste mês (R$)
-        </label>
+        <div className="mb-1 flex items-center justify-between">
+          <label className="text-xs text-muted">Fatura deste mês (R$)</label>
+          <button
+            type="button"
+            onClick={() => setShowInvoice(true)}
+            className="text-xs text-brand"
+          >
+            📄 Importar fatura
+          </button>
+        </div>
         <input
           inputMode="decimal"
           value={bill}
@@ -156,5 +166,16 @@ export function CardSheet({
         </div>
       </form>
     </Sheet>
+
+    {showInvoice && (
+      <InvoiceImportSheet
+        onImport={(totalCents) => {
+          setBill(formatAmount(totalCents))
+          setShowInvoice(false)
+        }}
+        onClose={() => setShowInvoice(false)}
+      />
+    )}
+    </>
   )
 }
