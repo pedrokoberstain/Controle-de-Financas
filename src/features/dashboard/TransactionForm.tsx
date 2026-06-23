@@ -14,6 +14,8 @@ interface TransactionFormProps {
   categories: Category[]
   /** Quando presente, o formulário edita a transação existente. */
   transaction?: Transaction
+  /** Valores iniciais para um novo lançamento (ex.: vindo do scan de nota). */
+  initial?: Partial<NewTransaction>
   onSubmit: (input: NewTransaction) => Promise<unknown>
   onDelete?: () => void
   onClose: () => void
@@ -23,26 +25,33 @@ interface TransactionFormProps {
 export function TransactionForm({
   categories,
   transaction,
+  initial,
   onSubmit,
   onDelete,
   onClose,
 }: TransactionFormProps) {
   const editing = Boolean(transaction)
   const [type, setType] = useState<TransactionType>(
-    transaction?.type ?? 'expense',
+    transaction?.type ?? initial?.type ?? 'expense',
   )
   const [amount, setAmount] = useState(
-    transaction ? formatAmount(transaction.amountCents) : '',
+    transaction
+      ? formatAmount(transaction.amountCents)
+      : initial?.amountCents
+        ? formatAmount(initial.amountCents)
+        : '',
   )
   const [description, setDescription] = useState(
     transaction && transaction.description !== 'Sem descrição'
       ? transaction.description
-      : '',
+      : (initial?.description ?? ''),
   )
   const [categoryId, setCategoryId] = useState<string>(
-    transaction?.categoryId ?? categories[0]?.id ?? '',
+    transaction?.categoryId ?? initial?.categoryId ?? categories[0]?.id ?? '',
   )
-  const [date, setDate] = useState(transaction?.date ?? todayISO())
+  const [date, setDate] = useState(
+    transaction?.date ?? initial?.date ?? todayISO(),
+  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
