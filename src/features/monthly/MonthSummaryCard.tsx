@@ -5,6 +5,8 @@ import type { MonthSummary } from '../../domain/monthly'
 
 interface MonthSummaryCardProps {
   summary: MonthSummary
+  /** Se o mês exibido é o corrente (controla o texto "por dia"). */
+  isCurrentMonth?: boolean
   onEditSalary: () => void
 }
 
@@ -14,6 +16,7 @@ interface MonthSummaryCardProps {
  */
 export function MonthSummaryCard({
   summary,
+  isCurrentMonth = true,
   onEditSalary,
 }: MonthSummaryCardProps) {
   const {
@@ -69,10 +72,12 @@ export function MonthSummaryCard({
         <p className="mt-1 text-sm font-medium text-danger">
           As contas passam da renda em {formatBRL(-leftoverCents)}.
         </p>
-      ) : (
+      ) : isCurrentMonth ? (
         <p className="mt-1 text-sm text-muted">
           ≈ {formatBRL(perDayCents)} por dia até o fim do mês
         </p>
+      ) : (
+        <p className="mt-1 text-sm text-muted">livre depois das contas</p>
       )}
 
       <div className="mt-4">

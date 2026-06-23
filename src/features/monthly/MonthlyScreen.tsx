@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
 import { computeMonthSummary, type Bill } from '../../domain/monthly'
-import { monthKey, monthLabel } from '../../domain/period'
+import {
+  addMonths,
+  isSameMonth,
+  monthKey,
+  monthLabel,
+  startOfMonth,
+} from '../../domain/period'
 import type { Card, FixedExpense } from '../../domain/types'
 import { useMonthly } from '../../hooks/useMonthly'
 import { BillRow } from './BillRow'
@@ -34,13 +40,17 @@ export function MonthlyScreen() {
   const [showNewCard, setShowNewCard] = useState(false)
   const [editingFixed, setEditingFixed] = useState<FixedExpense | null>(null)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  // Mês exibido (1º dia do mês). Permite navegar para o passado/futuro.
+  const [refDate, setRefDate] = useState(() => startOfMonth())
 
-  const month = monthKey()
-  const today = new Date().getDate()
+  const month = monthKey(refDate)
+  const isCurrentMonth = isSameMonth(refDate, new Date())
+  // Só destaca "vence em breve" no mês corrente.
+  const today = isCurrentMonth ? new Date().getDate() : 99
 
   const summary = useMemo(
-    () => computeMonthSummary(salaryCents, fixedExpenses, cards),
-    [salaryCents, fixedExpenses, cards],
+    () => computeMonthSummary(salaryCents, fixedExpenses, cards, refDate),
+    [salaryCents, fixedExpenses, cards, refDate],
   )
 
   function handleToggle(bill: Bill) {
@@ -80,14 +90,38 @@ export function MonthlyScreen() {
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md px-4 pb-28 pt-6">
-      <header className="mb-5">
-        <h1 className="text-xl font-bold">Mês</h1>
-        <p className="text-sm capitalize text-muted">{monthLabel()}</p>
+      <header className="mb-5 flex items-center justify-between">
+        <button
+          onClick={() => setRefDate((d) => addMonths(d, -1))}
+          aria-label="Mês anterior"
+          className="rounded-xl bg-surface-2 px-3 py-2 text-sm"
+        >
+          ‹
+        </button>
+        <div className="text-center">
+          <h1 className="text-lg font-bold capitalize">{monthLabel(refDate)}</h1>
+          {!isCurrentMonth && (
+            <button
+              onClick={() => setRefDate(startOfMonth())}
+              className="text-xs text-brand"
+            >
+              voltar ao mês atual
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => setRefDate((d) => addMonths(d, 1))}
+          aria-label="Próximo mês"
+          className="rounded-xl bg-surface-2 px-3 py-2 text-sm"
+        >
+          ›
+        </button>
       </header>
 
       <div className="flex flex-col gap-4">
         <MonthSummaryCard
           summary={summary}
+          isCurrentMonth={isCurrentMonth}
           onEditSalary={() => setShowSalary(true)}
         />
         <ProjectionCard nextMonthCents={summary.nextMonthProjectionCents} />

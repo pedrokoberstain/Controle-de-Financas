@@ -84,6 +84,21 @@ export function monthKey(reference: Date = new Date()): string {
   return todayISO(reference).slice(0, 7)
 }
 
+/** Primeiro dia do mês de `reference` (00:00 local). */
+export function startOfMonth(reference: Date = new Date()): Date {
+  return new Date(reference.getFullYear(), reference.getMonth(), 1)
+}
+
+/** Retorna uma nova data deslocada em `n` meses (n pode ser negativo). */
+export function addMonths(reference: Date, n: number): Date {
+  return new Date(reference.getFullYear(), reference.getMonth() + n, 1)
+}
+
+/** True se as duas datas caem no mesmo mês/ano. */
+export function isSameMonth(a: Date, b: Date): boolean {
+  return monthKey(a) === monthKey(b)
+}
+
 /** Nome do mês por extenso, ex.: "junho de 2026". */
 export function monthLabel(reference: Date = new Date()): string {
   return reference.toLocaleDateString('pt-BR', {
