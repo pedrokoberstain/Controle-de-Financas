@@ -4,6 +4,7 @@ import type { Category, Transaction } from '../../domain/types'
 interface TransactionListProps {
   transactions: Transaction[]
   categories: Category[]
+  onEdit: (transaction: Transaction) => void
   onDelete: (id: string) => void
 }
 
@@ -19,6 +20,7 @@ function formatDate(iso: string): string {
 export function TransactionList({
   transactions,
   categories,
+  onEdit,
   onDelete,
 }: TransactionListProps) {
   const categoryById = new Map(categories.map((c) => [c.id, c]))
@@ -43,21 +45,26 @@ export function TransactionList({
         return (
           <li
             key={t.id}
-            className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
+            className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
           >
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg"
-              style={{ backgroundColor: `${category?.color ?? '#334155'}26` }}
+            <button
+              onClick={() => onEdit(t)}
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
-              {category?.icon ?? '📦'}
-            </span>
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg"
+                style={{ backgroundColor: `${category?.color ?? '#334155'}26` }}
+              >
+                {category?.icon ?? '📦'}
+              </span>
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{t.description}</p>
-              <p className="text-xs text-muted">
-                {category?.name ?? 'Outros'} · {formatDate(t.date)}
-              </p>
-            </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{t.description}</p>
+                <p className="text-xs text-muted">
+                  {category?.name ?? 'Outros'} · {formatDate(t.date)}
+                </p>
+              </div>
+            </button>
 
             <span
               className={`shrink-0 text-sm font-semibold ${

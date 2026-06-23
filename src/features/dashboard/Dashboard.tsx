@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
-import { summarizePeriod } from '../../domain/budget'
+import { expensesByCategory, summarizePeriod } from '../../domain/budget'
 import { PERIOD_LABELS } from '../../domain/period'
-import type { PeriodKey } from '../../domain/types'
+import type { PeriodKey, Transaction } from '../../domain/types'
 import { useFinance } from '../../hooks/useFinance'
 import { BalanceCard } from './BalanceCard'
 import { BudgetSheet } from './BudgetSheet'
+import { CategoryBreakdown } from './CategoryBreakdown'
 import { StatsRow } from './StatsRow'
 import { TransactionForm } from './TransactionForm'
 import { TransactionList } from './TransactionList'
@@ -24,6 +25,7 @@ export function Dashboard() {
     loading,
     error,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     setBudget,
   } = useFinance()
@@ -31,11 +33,17 @@ export function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>('day')
   const [showForm, setShowForm] = useState(false)
   const [showBudget, setShowBudget] = useState(false)
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null)
 
   const summary = useMemo(() => {
     if (!budget) return null
     return summarizePeriod(transactions, budget, period)
   }, [transactions, budget, period])
+
+  const categorySlices = useMemo(
+    () => expensesByCategory(transactions, period),
+    [transactions, period],
+  )
 
   if (loading) {
     return (
@@ -80,6 +88,7 @@ export function Dashboard() {
         <div className="flex flex-col gap-4">
           <BalanceCard summary={summary} />
           <StatsRow summary={summary} />
+          <CategoryBreakdown slices={categorySlices} categories={categories} />
         </div>
       )}
 
@@ -90,6 +99,7 @@ export function Dashboard() {
         <TransactionList
           transactions={transactions.slice(0, 30)}
           categories={categories}
+          onEdit={setEditingTx}
           onDelete={(id) => void deleteTransaction(id)}
         />
       </section>
@@ -108,6 +118,19 @@ export function Dashboard() {
           categories={categories}
           onSubmit={addTransaction}
           onClose={() => setShowForm(false)}
+        />
+      )}
+
+      {editingTx && (
+        <TransactionForm
+          categories={categories}
+          transaction={editingTx}
+          onSubmit={(patch) => updateTransaction(editingTx.id, patch)}
+          onDelete={() => {
+            void deleteTransaction(editingTx.id)
+            setEditingTx(null)
+          }}
+          onClose={() => setEditingTx(null)}
         />
       )}
 

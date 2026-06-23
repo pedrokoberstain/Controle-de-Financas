@@ -52,6 +52,41 @@ function sumInPeriod(
     .reduce((acc, t) => acc + t.amountCents, 0)
 }
 
+export interface CategorySlice {
+  categoryId: string | null
+  spentCents: number
+  /** Fração do total de gastos do período (0..1). */
+  ratio: number
+}
+
+/**
+ * Soma os gastos por categoria no período, ordenado do maior para o menor.
+ * Útil para o gráfico "para onde vai o dinheiro".
+ */
+export function expensesByCategory(
+  transactions: Transaction[],
+  period: PeriodKey,
+): CategorySlice[] {
+  const range = getCurrentRange(period)
+  const totals = new Map<string | null, number>()
+
+  for (const t of transactions) {
+    if (t.type !== 'expense' || !isWithinRange(t.date, range)) continue
+    totals.set(t.categoryId, (totals.get(t.categoryId) ?? 0) + t.amountCents)
+  }
+
+  const grandTotal = [...totals.values()].reduce((a, b) => a + b, 0)
+  if (grandTotal === 0) return []
+
+  return [...totals.entries()]
+    .map(([categoryId, spentCents]) => ({
+      categoryId,
+      spentCents,
+      ratio: spentCents / grandTotal,
+    }))
+    .sort((a, b) => b.spentCents - a.spentCents)
+}
+
 /** Monta o resumo financeiro de um período. */
 export function summarizePeriod(
   transactions: Transaction[],

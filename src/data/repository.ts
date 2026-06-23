@@ -24,6 +24,14 @@ export type NewFixedExpense = Omit<FixedExpense, 'id' | 'createdAt'>
 /** Dados de entrada para criar um cartão. */
 export type NewCard = Omit<Card, 'id' | 'createdAt'>
 
+/** Pacote de backup com todos os dados do app. */
+export interface BackupData {
+  app: 'controle-de-financas'
+  version: number
+  exportedAt: string
+  data: Record<string, unknown>
+}
+
 /**
  * Contrato de persistência do app. A UI depende apenas desta interface,
  * nunca da implementação concreta. Hoje usamos localStorage; amanhã
@@ -33,6 +41,10 @@ export interface FinanceRepository {
   // Transações
   listTransactions(): Promise<Transaction[]>
   addTransaction(input: NewTransaction): Promise<Transaction>
+  updateTransaction(
+    id: string,
+    patch: Partial<NewTransaction>,
+  ): Promise<Transaction>
   deleteTransaction(id: string): Promise<void>
 
   // Categorias
@@ -77,4 +89,8 @@ export interface FinanceRepository {
   addCard(input: NewCard): Promise<Card>
   updateCard(id: string, patch: Partial<NewCard>): Promise<Card>
   deleteCard(id: string): Promise<void>
+
+  // Backup
+  exportData(): Promise<BackupData>
+  importData(backup: BackupData): Promise<void>
 }

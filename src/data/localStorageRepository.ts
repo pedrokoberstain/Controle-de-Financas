@@ -11,6 +11,7 @@ import type {
 import { DEFAULT_CATEGORIES } from './defaultCategories'
 import { DEFAULT_CARDS, DEFAULT_FIXED_EXPENSES } from './defaultMonthly'
 import type {
+  BackupData,
   FinanceRepository,
   NewCard,
   NewFixedExpense,
@@ -18,6 +19,8 @@ import type {
   NewProjectItem,
   NewTransaction,
 } from './repository'
+
+const BACKUP_VERSION = 1
 
 const KEYS = {
   transactions: 'cf:transactions',
@@ -77,6 +80,18 @@ export class LocalStorageRepository implements FinanceRepository {
     items.push(transaction)
     write(KEYS.transactions, items)
     return transaction
+  }
+
+  async updateTransaction(
+    id: string,
+    patch: Partial<NewTransaction>,
+  ): Promise<Transaction> {
+    const items = read<Transaction[]>(KEYS.transactions, [])
+    const idx = items.findIndex((t) => t.id === id)
+    if (idx === -1) throw new Error('Transação não encontrada')
+    items[idx] = { ...items[idx], ...patch }
+    write(KEYS.transactions, items)
+    return items[idx]
   }
 
   async deleteTransaction(id: string): Promise<void> {
@@ -319,5 +334,31 @@ export class LocalStorageRepository implements FinanceRepository {
       KEYS.cards,
       cards.filter((c) => c.id !== id),
     )
+  }
+
+  // --------------------------------------------------------------------- Backup
+  async exportData(): Promise<BackupData> {
+    const data: Record<string, unknown> = {}
+    for (const key of Object.values(KEYS)) {
+      const raw = localStorage.getItem(key)
+      if (raw !== null) data[key] = JSON.parse(raw)
+    }
+    return {
+      app: 'controle-de-financas',
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data,
+    }
+  }
+
+  async importData(backup: BackupData): Promise<void> {
+    if (backup?.app !== 'controle-de-financas') {
+      throw new Error('Arquivo de backup inválido.')
+    }
+    const validKeys = new Set<string>(Object.values(KEYS))
+    for (const [key, value] of Object.entries(backup.data ?? {})) {
+      // Só restaura chaves conhecidas do app.
+      if (validKeys.has(key)) write(key, value)
+    }
   }
 }

@@ -1,28 +1,48 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Sheet'
-import { parseToCents } from '../../domain/money'
+import { formatAmount, parseToCents } from '../../domain/money'
 import { todayISO } from '../../domain/period'
-import type { Category, TransactionType } from '../../domain/types'
+import type {
+  Category,
+  Transaction,
+  TransactionType,
+} from '../../domain/types'
 import type { NewTransaction } from '../../data'
 
 interface TransactionFormProps {
   categories: Category[]
+  /** Quando presente, o formulário edita a transação existente. */
+  transaction?: Transaction
   onSubmit: (input: NewTransaction) => Promise<unknown>
+  onDelete?: () => void
   onClose: () => void
 }
 
-/** Bottom-sheet para registrar um gasto ou receita. */
+/** Bottom-sheet para registrar ou editar um gasto/receita. */
 export function TransactionForm({
   categories,
+  transaction,
   onSubmit,
+  onDelete,
   onClose,
 }: TransactionFormProps) {
-  const [type, setType] = useState<TransactionType>('expense')
-  const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? '')
-  const [date, setDate] = useState(todayISO())
+  const editing = Boolean(transaction)
+  const [type, setType] = useState<TransactionType>(
+    transaction?.type ?? 'expense',
+  )
+  const [amount, setAmount] = useState(
+    transaction ? formatAmount(transaction.amountCents) : '',
+  )
+  const [description, setDescription] = useState(
+    transaction && transaction.description !== 'Sem descrição'
+      ? transaction.description
+      : '',
+  )
+  const [categoryId, setCategoryId] = useState<string>(
+    transaction?.categoryId ?? categories[0]?.id ?? '',
+  )
+  const [date, setDate] = useState(transaction?.date ?? todayISO())
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,7 +72,10 @@ export function TransactionForm({
   }
 
   return (
-    <Sheet title="Novo lançamento" onClose={onClose}>
+    <Sheet
+      title={editing ? 'Editar lançamento' : 'Novo lançamento'}
+      onClose={onClose}
+    >
       <form onSubmit={handleSubmit}>
         <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
           {(['expense', 'income'] as const).map((t) => (
@@ -115,14 +138,20 @@ export function TransactionForm({
         {error && <p className="mb-3 text-sm text-danger">{error}</p>}
 
         <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="flex-1"
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
+          {editing && onDelete ? (
+            <Button type="button" variant="danger" onClick={onDelete}>
+              Excluir
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1"
+              onClick={onClose}
+            >
+              Cancelar
+            </Button>
+          )}
           <Button type="submit" className="flex-1" disabled={submitting}>
             {submitting ? 'Salvando...' : 'Salvar'}
           </Button>

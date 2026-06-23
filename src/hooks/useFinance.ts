@@ -63,6 +63,18 @@ export function useFinance() {
     return created
   }, [])
 
+  const updateTransaction = useCallback(
+    async (id: string, patch: Partial<NewTransaction>) => {
+      const updated = await repository.updateTransaction(id, patch)
+      setState((s) => ({
+        ...s,
+        transactions: s.transactions.map((t) => (t.id === id ? updated : t)),
+      }))
+      return updated
+    },
+    [],
+  )
+
   const deleteTransaction = useCallback(async (id: string) => {
     await repository.deleteTransaction(id)
     setState((s) => ({
@@ -81,6 +93,7 @@ export function useFinance() {
     ...state,
     reload: load,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     setBudget,
   }
